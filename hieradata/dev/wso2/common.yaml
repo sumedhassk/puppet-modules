@@ -26,6 +26,15 @@ wso2::hosts_mapping :
   localhost :
     ip_address : 127.0.0.1
     hostname : localhost
+  puppetmaster :
+    ip_address :  192.168.56.2
+    hostname : puppet
+  identity-1 : 
+    ip_address :  192.168.56.100 
+    hostname : identity-1 
+  identity-2 : 
+    ip_address :  192.168.56.101 
+    hostname : identity-2
 
 wso2::ipaddress : "%{::ipaddress}"
 wso2::fqdn : "%{::fqdn}"
@@ -51,7 +60,8 @@ wso2::template_list :
 #  - password-tmp
 
 # File list to be copied to the server
-wso2::file_list : []
+wso2::file_list : 
+  - repository/components/lib
 
 # JVM settings
 wso2::jvm :
@@ -103,6 +113,21 @@ packages :
   - unzip
   - tree
 
+wso2::registry_mounts:
+  wso2_config_db:
+    path: /_system/config
+    target_path: /_system/config
+    read_only: false
+    registry_root: /
+    enable_cache: true
+
+  wso2_gov_db:
+    path: /_system/governance
+    target_path: /_system/governance
+    read_only: false
+    registry_root: /
+    enable_cache: true
+
 # WSO2 datasources
 wso2::master_datasources :
   wso2_carbon_db :
@@ -119,20 +144,34 @@ wso2::master_datasources :
     default_auto_commit : "%{hiera('wso2::datasources::common::default_auto_commit')}"
     validation_query : "%{hiera('wso2::datasources::h2::validation_query')}"
     validation_interval : "%{hiera('wso2::datasources::common::validation_interval')}"
-#  wso2user_db :
-#    name : WSO2_USER_DB
-#    description : The datasource is used for user mangement and userstore
-#    driver_class_name : org.h2.Driver
-#    url : jdbc:h2:repository/database/WSO2CARBON_DB?autoReconnect=true
-#    username : "%{hiera('wso2::datasources::common::username')}"
-#    password : "%{hiera('wso2::datasources::common::password')}"
-#    jndi_config : jdbc/WSO2_USER_DB
-#    max_active : "%{hiera('wso2::datasources::common::max_active')}"
-#    max_wait : "%{hiera('wso2::datasources::common::max_wait')}"
-#    test_on_borrow : "%{hiera('wso2::datasources::common::test_on_borrow')}"
-#    default_auto_commit : "%{hiera('wso2::datasources::common::default_auto_commit')}"
-#    validation_query : "%{hiera('wso2::datasources::h2::validation_query')}"
-#    validation_interval : "%{hiera('wso2::datasources::common::validation_interval')}"
+  wso2_gov_db:
+    name : WSO2_GOV_DB
+    description: The datasource used for gov registry
+    driver_class_name : com.mysql.jdbc.Driver
+    url : jdbc:mysql://mysql-server:port/dbGovernance?autoReconnect=true&amp;relaxAutoCommit=true&amp;
+    username : GovUser
+    password : 123pass
+    jndi_config : jdbc/WSO2_GOV_DB
+    max_active: "%{hiera('wso2::datasources::common::max_active')}"
+    max_wait: "%{hiera('wso2::datasources::common::max_wait')}"
+    test_on_borrow: "%{hiera('wso2::datasources::common::test_on_borrow')}"
+    validation_query: "%{hiera('wso2::datasources::mysql::validation_query')}"
+    validation_interval: "%{hiera('wso2::datasources::common::validation_interval')}"
+
+  wso2user_db :
+    name : WSO2USER_DB
+    description : The datasource is used for user mangement and userstore
+    driver_class_name : com.mysql.jdbc.Driver
+    url : jdbc:mysql://mysql-server:port/dbUserstore?autoReconnect=true&amp;relaxAutoCommit=true&amp;
+    username : UserstoreUser
+    password : 123pass
+    jndi_config : jdbc/WSO2USER_DB
+    max_active : "%{hiera('wso2::datasources::common::max_active')}"
+    max_wait : "%{hiera('wso2::datasources::common::max_wait')}"
+    test_on_borrow : "%{hiera('wso2::datasources::common::test_on_borrow')}"
+    default_auto_commit : "%{hiera('wso2::datasources::common::default_auto_commit')}"
+    validation_query : "%{hiera('wso2::datasources::mysql::validation_query')}"
+    validation_interval : "%{hiera('wso2::datasources::common::validation_interval')}"
 
 # User management datasource defaults to local h2 db
 wso2::usermgt_datasource: wso2_carbon_db

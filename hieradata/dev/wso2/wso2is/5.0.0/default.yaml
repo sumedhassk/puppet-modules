@@ -21,21 +21,24 @@ wso2::pack_extracted_dir: "%{::product_name}-%{::product_version}"
 #  - lib/org.wso2.ciphertool-1.0.0-wso2v2.jar
 
 wso2::template_list :
-  - repository/conf/datasources/am-datasources.xml
+  - repository/conf/datasources/is-datasources.xml
+  - repository/conf/identity.xml
+  - repository/conf/security/application-authentication.xml
 #  - repository/conf/security/cipher-text.properties
 #  - repository/conf/security/cipher-tool.properties
 #  - bin/ciphertool.sh
 #  - password-tmp
 
 wso2::service_name: wso2is
-wso2::hostname : is.wso2.com
-wso2::mgt_hostname : is.wso2.com
+wso2::hostname : identity.wso2test.com
+wso2::mgt_hostname : identity.wso2test.com
 
 wso2::clustering :
-    enabled : false
-    local_member_host : 127.0.0.1
+    enabled : true
+    local_member_host : "%{::ipaddress}"
     local_member_port : 4000
     membership_scheme : wka
+    domain : wso2.is.domain
     wka :
        members :
          -
@@ -45,7 +48,7 @@ wso2::clustering :
            hostname : localhost
            port : 4001
     multicast :
-       domain : wso2.carbon.domain
+       domain : wso2.is.domain
     k8s :
     ppaas :
 
@@ -66,16 +69,16 @@ wso2::clustering :
 
 #wso2::usermgt_datasource: WSO2USER_DB
 
-wso2::am_datasources :
-  wso2am_db:
-    name : WSO2AM_DB
-    description: The datasource used for IS as Key Manager database
-    driver_class_name : org.h2.Driver
-    url : jdbc:h2:repository/database/WSO2AM_DB;DB_CLOSE_ON_EXIT=FALSE
-    username : "%{hiera('wso2::datasources::common::username')}"
-    password : "%{hiera('wso2::datasources::common::password')}"
+wso2::is_datasources :
+  wso2is_db:
+    name : WSO2IS_DB
+    description: The datasource used for IS identity database
+    driver_class_name : com.mysql.jdbc.Driver
+    url : jdbc:mysql://mysql-server:port/dbIdentity?autoReconnect=true&amp;relaxAutoCommit=true&amp;
+    username : IdentityUser
+    password : 123pass
     #secretAlias :
-    jndi_config : jdbc/WSO2AM_DB
+    jndi_config : jdbc/WSO2IS_DB
     max_active: "%{hiera('wso2::datasources::common::max_active')}"
     max_wait: "%{hiera('wso2::datasources::common::max_wait')}"
     test_on_borrow: "%{hiera('wso2::datasources::common::test_on_borrow')}"
@@ -83,21 +86,21 @@ wso2::am_datasources :
     validation_query: "%{hiera('wso2::datasources::mysql::validation_query')}"
     validation_interval: "%{hiera('wso2::datasources::common::validation_interval')}"
 
-#wso2::master_datasources :
-#  wso2_config_db:
-#    name : WSO2_CONFIG_DB
-#    description: The datasource used for config registry
-#    driver_class_name : org.h2.Driver
-#    url : jdbc:h2:repository/database/WSO2_CONFIG_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000
-#    username : "%{hiera('wso2::datasources::common::username')}"
-#    password : "%{hiera('wso2::datasources::common::password')}"
-#    jndi_config : jdbc/WSO2_CONFIG_DB
-#    max_active: "%{hiera('wso2::datasources::common::max_active')}"
-#    max_wait: "%{hiera('wso2::datasources::common::max_wait')}"
-#    test_on_borrow: "%{hiera('wso2::datasources::common::test_on_borrow')}"
-#    validation_query: "%{hiera('wso2::datasources::mysql::validation_query')}"
-#    validation_interval: "%{hiera('wso2::datasources::common::validation_interval')}"
-#
+wso2::master_datasources :
+  wso2_config_db:
+    name : WSO2_CONFIG_DB
+    description: The datasource used for config registry
+    driver_class_name : com.mysql.jdbc.Driver
+    url : jdbc:mysql://mysql-server:port/dbIdentityConfig?autoReconnect=true&amp;relaxAutoCommit=true&amp;
+    username : ConfigDbUser
+    password : 123pass
+    jndi_config : jdbc/WSO2_CONFIG_DB
+    max_active: "%{hiera('wso2::datasources::common::max_active')}"
+    max_wait: "%{hiera('wso2::datasources::common::max_wait')}"
+    test_on_borrow: "%{hiera('wso2::datasources::common::test_on_borrow')}"
+    validation_query: "%{hiera('wso2::datasources::mysql::validation_query')}"
+    validation_interval: "%{hiera('wso2::datasources::common::validation_interval')}"
+
 #  wso2_gov_db:
 #    name : WSO2_GOV_DB
 #    description: The datasource used for gov registry
@@ -296,5 +299,5 @@ wso2::secure_vault_configs :
 # defined for servlet HTTP and HTTPS transport in K8s Service definition
 wso2::ports:
   proxyPort :
-    http: 32001
-    https: 32002
+    http: 80
+    https: 443

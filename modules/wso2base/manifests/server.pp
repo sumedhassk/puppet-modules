@@ -40,26 +40,23 @@ define wso2base::server (
 
   notice("Starting WSO2 product [name] ${::product_name}, [version] ${::product_version}, [CARBON_HOME] ${carbon_home}")
 
-  if $wso2_patching_mode == undef or str2bool("$wso2_patching_mode") != true {
-      # Remove any existing installations
-      wso2base::clean { $carbon_home:
-        mode              => $maintenance_mode,
-        pack_filename     => $pack_filename,
-        pack_dir          => $pack_dir
-      }
+  # Remove any existing installations
+  wso2base::clean { $carbon_home:
+    mode              => $maintenance_mode,
+    pack_filename     => $pack_filename,
+    pack_dir          => $pack_dir
+  }
 
-      # Copy the WSO2 product pack, extract and set permissions
-      wso2base::install { $carbon_home:
-          mode              => $install_mode,
-          install_dir       => $install_dir,
-          pack_filename     => $pack_filename,
-          pack_dir          => $pack_dir,
-          user              => $wso2_user,
-          group             => $wso2_group,
-          product_name      => $::product_name,
-          require           => Wso2base::Clean[$carbon_home],
-          notify            => Wso2base::Patch[$carbon_home]
-      }
+ # Copy the WSO2 product pack, extract and set permissions
+  wso2base::install { $carbon_home:
+    mode              => $install_mode,
+    install_dir       => $install_dir,
+    pack_filename     => $pack_filename,
+    pack_dir          => $pack_dir,
+    user              => $wso2_user,
+    group             => $wso2_group,
+    product_name      => $::product_name,
+    require           => Wso2base::Clean[$carbon_home]
   }
 
   # Copy any patches to patch directory
@@ -71,7 +68,7 @@ define wso2base::server (
       group             => $wso2_group,
       product_name      => $::product_name,
       product_version   => $::product_version,
-    #   subscribe         => Wso2base::Install[$carbon_home]
+      require           => Wso2base::Install[$carbon_home]
     }
   }
   else {
@@ -83,7 +80,7 @@ define wso2base::server (
       product_name      => $::product_name,
       product_version   => $::product_version,
       notify            => Service["${service_name}"],
-    #   subscribe         => Wso2base::Install[$carbon_home]
+      require           => Wso2base::Install[$carbon_home]
     }
   }
 
